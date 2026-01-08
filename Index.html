@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stranger Things Quiz PWA</title>
+
+  <!-- PWA META -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      background: radial-gradient(circle, #000 60%, #120000);
+      color: #e50914;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+      margin: 0;
+    }
+
+    #game-container {
+      background: rgba(0,0,0,0.9);
+      padding: 20px;
+      margin: 20px auto;
+      max-width: 720px;
+      border: 2px solid #e50914;
+      border-radius: 10px;
+      box-shadow: 0 0 20px red;
+    }
+
+    button {
+      background: #e50914;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+    }
+
+    button:hover { background: darkred; }
+
+    #status { margin-top: 15px; font-size: 18px; }
+  </style>
+</head>
+
+<body>
+
+<h1>🩸 Stranger Things Quiz 🩸</h1>
+
+<div id="game-container">
+  <button onclick="startGame()">▶ Start Game</button>
+
+  <h2 id="location">Location: Hawkins Lab</h2>
+  <h3 id="question">Tap Start to enter the Upside Down</h3>
+  <div id="options"></div>
+  <div id="status">Lives: 10 | Score: 0</div>
+</div>
+
+<audio id="bg-music" loop preload="auto">
+  <source src="https://cdn.pixabay.com/audio/2023/03/30/audio_3cfa4f25c1.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+  // REGISTER SERVICE WORKER
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+
+  const questions = [
+    {location:"Hawkins Lab", q:"What food does Eleven love?", options:["Pizza","Eggo Waffles","Burger","Donuts"], answer:"Eggo Waffles"},
+    {location:"Byers’ House", q:"What is the alternate dimension called?", options:["Dark Zone","Upside Down","Shadow Realm","Netherworld"], answer:"Upside Down"},
+    {location:"Starcourt Mall", q:"Where did Steve work?", options:["Scoops Ahoy","Ice House","Sweet Shop","Mall Cafe"], answer:"Scoops Ahoy"},
+    {location:"Forest", q:"Season 1 monster?", options:["Vecna","Mind Flayer","Demogorgon","Spider"], answer:"Demogorgon"}
+  ];
+
+  let lives = 10;
+  let score = 0;
+
+  function startGame() {
+    const music = document.getElementById("bg-music");
+    music.volume = 0.6;
+    music.play();
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    if (lives <= 0) return endGame();
+
+    let q = questions[Math.floor(Math.random() * questions.length)];
+    document.getElementById("location").innerText = "Location: " + q.location;
+    document.getElementById("question").innerText = q.q;
+
+    let options = document.getElementById("options");
+    options.innerHTML = "";
+
+    q.options.forEach(opt => {
+      let btn = document.createElement("button");
+      btn.innerText = opt;
+      btn.onclick = () => checkAnswer(opt, q.answer);
+      options.appendChild(btn);
+    });
+
+    document.getElementById("status").innerText = `Lives: ${lives} | Score: ${score}`;
+  }
+
+  function checkAnswer(sel, cor) {
+    document.getElementById("options").innerHTML = "";
+
+    if (sel === cor) score++;
+    else lives--;
+
+    let btn = document.createElement("button");
+    btn.innerText = "Next";
+    btn.onclick = loadQuestion;
+    document.getElementById("options").appendChild(btn);
+
+    document.getElementById("status").innerText = `Lives: ${lives} | Score: ${score}`;
+  }
+
+  function endGame() {
+    document.getElementById("bg-music").pause();
+    document.getElementById("game-container").innerHTML =
+      `<h2>Game Over</h2>
+       <p>Score: ${score}</p>
+       <button onclick="location.reload()">Restart</button>`;
+  }
+</script>
+
+</body>
+</html>
